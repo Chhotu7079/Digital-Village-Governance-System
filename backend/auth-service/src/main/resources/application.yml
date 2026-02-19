@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dvgs_auth
+    username: dvgs
+    password: dvgs
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true
+
+auth:
+  token:
+    secret: bXktc3VwZXItc2VjcmV0LWtleS0xMjM0NTY3ODkwMTIzNDU2
+    access-ttl: 15m
+    refresh-ttl: 30d
+    issuer: dvgs-auth
+  otp:
+    code-length: 6
+    ttl: 5m
+    resend-cooldown: 45s
+    max-attempts: 5

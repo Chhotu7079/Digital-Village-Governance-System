@@ -1,0 +1,41 @@
+server:
+  port: ${LAND_SERVICE_PORT:8085}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${AUTH_JWT_SECRET:}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+auth:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER:dvgs-auth}
+
+land:
+  external:
+    base-url: ${LAND_EXTERNAL_BASE_URL:http://localhost:8092}
+    timeout-ms: ${LAND_EXTERNAL_TIMEOUT_MS:3000}
+  cache:
+    enabled: ${LAND_CACHE_ENABLED:true}
+    ttl-seconds: ${LAND_CACHE_TTL_SECONDS:300}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_EXPOSE:health,info}
+
+logging:
+  level:
+    com.dvgs.land.external: INFO
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

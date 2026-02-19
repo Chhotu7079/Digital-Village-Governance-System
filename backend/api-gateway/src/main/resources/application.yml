@@ -1,0 +1,102 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: api-gateway
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: FailOpenRequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: ${RL_AUTH_REPLENISH_RATE:5}
+                redis-rate-limiter.burstCapacity: ${RL_AUTH_BURST_CAPACITY:10}
+                key-resolver: "#{@userOrIpKeyResolver}"
+        - id: complaint-service
+          uri: ${COMPLAINT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/complaints/**
+        - id: scheme-attachments
+          uri: ${SCHEME_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/attachments/**
+          filters:
+            - name: FailOpenRequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: ${RL_ATTACH_REPLENISH_RATE:10}
+                redis-rate-limiter.burstCapacity: ${RL_ATTACH_BURST_CAPACITY:20}
+                key-resolver: "#{@userOrIpKeyResolver}"
+
+        - id: scheme-service
+          uri: ${SCHEME_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/schemes/**,/api/applications/**,/api/officer/**,/api/eligibility/**,/api/analytics/**
+
+        - id: ration-service
+          uri: ${RATION_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/ration/**
+          filters:
+            - name: FailOpenRequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: ${RL_RATION_REPLENISH_RATE:10}
+                redis-rate-limiter.burstCapacity: ${RL_RATION_BURST_CAPACITY:20}
+                key-resolver: "#{@userOrIpKeyResolver}"
+
+        - id: land-service
+          uri: ${LAND_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/land/**
+          filters:
+            - name: FailOpenRequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: ${RL_LAND_REPLENISH_RATE:10}
+                redis-rate-limiter.burstCapacity: ${RL_LAND_BURST_CAPACITY:20}
+                key-resolver: "#{@userOrIpKeyResolver}"
+
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/notifications/**,/api/templates/**,/api/preferences/**,/api/notification-analytics/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # auth-service uses HS256 (shared secret), not JWKS
+          secret: ${AUTH_JWT_SECRET:change-me}
+
+auth:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER:dvgs-auth}
+
+gateway:
+  ratelimit:
+    # If true (default): Redis/rate limiter failures won't block traffic.
+    # If false: Redis outage can cause requests to fail.
+    fail-open: ${GATEWAY_RATELIMIT_FAIL_OPEN:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_EXPOSE:health,info}

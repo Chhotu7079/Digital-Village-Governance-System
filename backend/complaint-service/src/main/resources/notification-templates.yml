@@ -1,0 +1,27 @@
+notification:
+  templates:
+    COMPLAINT_CREATED:
+      sms:
+        en: "Dear citizen, complaint {{complaintId}} has been registered."
+        hi: "प्रिय नागरिक, शिकायत {{complaintId}} दर्ज कर ली गई है।"
+      whatsapp:
+        en: "Complaint {{complaintId}} submitted. Track status in the app."
+        hi: "शिकायत {{complaintId}} दर्ज की गई है। ऐप में स्थिति देखें।"
+    COMPLAINT_STATUS_CHANGED:
+      sms:
+        en: "Complaint {{complaintId}} moved to {{status}}."
+        hi: "शिकायत {{complaintId}} की स्थिति {{status}} हुई।"
+      whatsapp:
+        en: "Your complaint {{complaintId}} is now {{status}}."
+        hi: "आपकी शिकायत {{complaintId}} अब {{status}} है।"
+    COMPLAINT_ESCALATED:
+      sms:
+        en: "Complaint {{complaintId}} escalated for priority handling."
+        hi: "शिकायत {{complaintId}} को प्राथमिकता के लिए बढ़ाया गया।"
+      whatsapp:
+        en: "Complaint {{complaintId}} escalated. We are on it."
+        hi: "शिकायत {{complaintId}} एस्केलेट की गई है। हम कार्यरत हैं।"
+    COMPLAINT_FEEDBACK:
+      sms:
+        en: "Thanks for sharing feedback on complaint {{complaintId}}."
+        hi: "शिकायत {{complaintId}} पर प्रतिक्रिया देने के लिए धन्यवाद।"

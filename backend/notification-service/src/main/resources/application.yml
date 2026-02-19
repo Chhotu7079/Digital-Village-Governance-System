@@ -1,0 +1,74 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dvgs_notification
+    username: dvgs
+    password: dvgs
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.dvgs.*"
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+notification:
+  channels:
+    sms:
+      enabled: true
+      provider: twilio
+      from: "+9100000000"
+      account-sid: "${TWILIO_ACCOUNT_SID:dummy}"
+      auth-token: "${TWILIO_AUTH_TOKEN:dummy}"
+    whatsapp:
+      enabled: true
+      provider: twilio
+      number: "+9100000000"
+    email:
+      enabled: false
+      provider: ses
+      from: "no-reply@dvgs.org"
+    push:
+      enabled: true
+      provider: fcm
+  template-cache-ttl: PT10M
+  fallback-order:
+    - WHATSAPP
+    - SMS
+    - PUSH
+  retry:
+    max-attempts: 5
+    backoff-ms: 5000
+  dlq:
+    max-size: 1000
+
+auth-client:
+  jwk-set-uri: "${AUTH_SERVICE_JWKS:https://auth-service.local/.well-known/jwks.json}"
+  shared-secret: "${AUTH_SHARED_SECRET:change-me}"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+logging:
+  level:
+    com.dvgs.notification: INFO

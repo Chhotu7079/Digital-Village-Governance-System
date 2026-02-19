@@ -1,0 +1,149 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dvgs-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dvgs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dvgs}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - dvgs_postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dvgs}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: dvgs-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - dvgs_redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: dvgs-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "${ZOOKEEPER_PORT:-2181}:2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: dvgs-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Internal listener for other containers + external listener for host machine
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_PORT:-9092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: dvgs-rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: dvgs-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC_NOTIFICATION_EVENTS: ${KAFKA_TOPIC_NOTIFICATION_EVENTS:-notification-events}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        echo "Creating topic: $KAFKA_TOPIC_NOTIFICATION_EVENTS"
+        kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" \
+          --create --if-not-exists \
+          --topic "$KAFKA_TOPIC_NOTIFICATION_EVENTS" \
+          --replication-factor 1 \
+          --partitions 3
+        echo "Kafka topic ensured: $KAFKA_TOPIC_NOTIFICATION_EVENTS"
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-13T22-19-12Z
+    container_name: dvgs-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - dvgs_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  minio-init:
+    image: minio/mc:RELEASE.2024-12-07T23-18-28Z
+    container_name: dvgs-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET_ATTACHMENTS: ${MINIO_BUCKET_ATTACHMENTS:-dvgs-attachments}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        mc alias set dvgs http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "dvgs/$MINIO_BUCKET_ATTACHMENTS"
+        echo "MinIO bucket ensured: $MINIO_BUCKET_ATTACHMENTS"
+
+volumes:
+  dvgs_postgres_data:
+  dvgs_redis_data:
+  dvgs_minio_data:
