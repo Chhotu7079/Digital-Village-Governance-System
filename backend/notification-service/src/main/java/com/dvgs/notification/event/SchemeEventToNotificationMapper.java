@@ -3,7 +3,7 @@ package com.dvgs.notification.event;
 import com.dvgs.notification.domain.ChannelType;
 import com.dvgs.notification.domain.NotificationPriority;
 import com.dvgs.notification.dto.NotificationRequestDto;
-import com.dvgs.notification.event.dto.SchemeEventPayload;
+import com.dvgs.common.events.dto.SchemeEventPayload;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;

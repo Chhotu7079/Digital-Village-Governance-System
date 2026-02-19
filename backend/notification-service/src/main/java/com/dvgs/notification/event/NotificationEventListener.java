@@ -1,7 +1,7 @@
 package com.dvgs.notification.event;
 
 import com.dvgs.notification.dto.NotificationRequestDto;
-import com.dvgs.notification.event.dto.SchemeEventPayload;
+import com.dvgs.common.events.dto.SchemeEventPayload;
 import com.dvgs.notification.service.NotificationDispatchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

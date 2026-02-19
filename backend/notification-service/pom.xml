@@ -36,6 +36,15 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- DVGS shared contracts -->
+        <dependency>
+            <groupId>com.dvgs</groupId>
+            <artifactId>common-lib</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../common-lib/target/common-lib-0.0.1-SNAPSHOT.jar</systemPath>
+        </dependency>
+
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
