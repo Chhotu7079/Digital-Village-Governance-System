@@ -3,16 +3,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.dvgs</groupId>
+  <parent>
+    <groupId>com.dvgs</groupId>
+    <artifactId>dvgs-backend</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <artifactId>common-lib</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>common-lib</name>
   <description>Shared contracts and utilities for DVGS microservices</description>
 
   <properties>
-    <java.version>21</java.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
   </properties>
 
