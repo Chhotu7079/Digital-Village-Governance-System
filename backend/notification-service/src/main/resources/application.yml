@@ -5,18 +5,24 @@ spring:
   application:
     name: notification-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/dvgs_notification
-    username: dvgs
-    password: dvgs
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs}?sslmode=${POSTGRES_SSLMODE:prefer}
+    username: ${POSTGRES_USER:dvgs}
+    password: ${POSTGRES_PASSWORD:dvgs}
+
+  flyway:
+    enabled: true
+    default-schema: ${DB_SCHEMA_NOTIFICATION:notification}
+    schemas: ${DB_SCHEMA_NOTIFICATION:notification}
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
+        default_schema: ${DB_SCHEMA_NOTIFICATION:notification}
         format_sql: true
     show-sql: false
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: notification-service
       auto-offset-reset: latest
@@ -25,10 +31,10 @@ spring:
       properties:
         spring.json.trusted.packages: "com.dvgs.*"
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
 
 notification:
   channels:
