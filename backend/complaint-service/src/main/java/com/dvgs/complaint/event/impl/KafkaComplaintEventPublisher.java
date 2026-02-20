@@ -22,8 +22,13 @@ public class KafkaComplaintEventPublisher implements ComplaintEventPublisher {
     public void publish(ComplaintEvent event) {
         try {
             kafkaTemplate.send(kafkaProperties.getComplaintTopic(), event.getComplaintId().toString(), event)
-                    .addCallback(result -> log.info("Sent complaint event {}", event.getType()),
-                            ex -> log.error("Failed to send complaint event", ex));
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Failed to send complaint event", ex);
+                        } else {
+                            log.info("Sent complaint event {}", event.getType());
+                        }
+                    });
         } catch (Exception ex) {
             log.error("Kafka publish error", ex);
         }

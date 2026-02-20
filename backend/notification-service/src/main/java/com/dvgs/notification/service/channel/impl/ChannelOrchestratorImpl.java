@@ -155,7 +155,7 @@ public class ChannelOrchestratorImpl implements ChannelOrchestrator {
 
     private boolean sendOnChannel(NotificationRequestDto requestDto, String requestId, ChannelType channel) {
         NotificationLog logEntry = new NotificationLog();
-        logEntry.setRequestId(requestId);
+        logEntry.setRequestId(java.util.UUID.fromString(requestId));
         logEntry.setChannel(channel);
         logEntry.setStatus(NotificationStatus.QUEUED);
         logEntry.setAttemptCount(0);

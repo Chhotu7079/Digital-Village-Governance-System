@@ -1,5 +1,8 @@
 -- Phase 1: Scheme catalog
 
+CREATE SCHEMA IF NOT EXISTS scheme;
+SET search_path TO scheme;
+
 CREATE TABLE IF NOT EXISTS schemes (
     id BIGSERIAL PRIMARY KEY,
     scheme_code VARCHAR(64) NOT NULL UNIQUE,

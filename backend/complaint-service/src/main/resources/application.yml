@@ -1,10 +1,27 @@
 spring:
   application:
     name: complaint-service
+
+  security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: ${ACTUATOR_PASS:actuator}
+      roles: ACTUATOR
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
+
   config:
     import: notification-templates.yml
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs}?sslmode=${POSTGRES_SSLMODE:prefer}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs_complaint}?sslmode=${POSTGRES_SSLMODE:prefer}
     username: ${POSTGRES_USER:dvgs}
     password: ${POSTGRES_PASSWORD:dvgs}
   jpa:
@@ -21,32 +38,35 @@ spring:
     schemas: ${DB_SCHEMA_COMPLAINT:complaint}
 
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
 
 auth:
   token:
-    secret: bXktc3VwZXItc2VjcmV0LWtleS0xMjM0NTY3ODkwMTIzNDU2
+    secret: ${AUTH_JWT_SECRET:bXktc3VwZXItc2VjcmV0LWtleS0xMjM0NTY3ODkwMTIzNDU2}
     issuer: dvgs-auth
 
 attachments:
   base-path: uploads/complaints
   max-size-bytes: 5242880
   allowed-mime-types: ["image/png", "image/jpeg", "application/pdf"]
-  download-secret: change-me
+  download-secret: ${COMPLAINT_ATTACHMENTS_DOWNLOAD_SECRET:change-me}
   download-ttl-seconds: 300
 
 notification-service:
-  url: http://localhost:8090/api/notifications
+  url: ${NOTIFICATION_SERVICE_URL:http://localhost:8083}/api/notifications
 
 kafka:
-  bootstrap-servers: localhost:9092
-  complaint-topic: complaint-events
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  complaint-topic: ${KAFKA_TOPIC_COMPLAINT_EVENTS:complaint-events}
 
 complaint:
   sla:

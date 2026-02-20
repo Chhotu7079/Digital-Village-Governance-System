@@ -1,5 +1,8 @@
 -- Initial schema for auth service
 
+CREATE SCHEMA IF NOT EXISTS auth;
+SET search_path TO auth;
+
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     full_name VARCHAR(255) NOT NULL,

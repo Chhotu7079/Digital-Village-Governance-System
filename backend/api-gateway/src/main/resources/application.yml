@@ -1,10 +1,31 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   forward-headers-strategy: framework
 
 spring:
   application:
     name: api-gateway
+
+  security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: ${ACTUATOR_PASS:actuator}
+      roles: ACTUATOR
+    oauth2:
+      resourceserver:
+        jwt:
+          # auth-service uses HS256 (shared secret), not JWKS
+          secret: ${AUTH_JWT_SECRET:change-me}
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
 
   data:
     redis:
@@ -78,13 +99,6 @@ spring:
           predicates:
             - Path=/api/notifications/**,/api/templates/**,/api/preferences/**,/api/notification-analytics/**
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # auth-service uses HS256 (shared secret), not JWKS
-          secret: ${AUTH_JWT_SECRET:change-me}
-
 auth:
   jwt:
     issuer: ${AUTH_JWT_ISSUER:dvgs-auth}
@@ -99,4 +113,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ${ACTUATOR_EXPOSE:health,info}
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized

@@ -9,16 +9,18 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(prefix = "notification.channels.push", name = "enabled", havingValue = "true")
 public class PushChannelAdapter implements ChannelAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(PushChannelAdapter.class);
     private final FirebaseMessaging firebaseMessaging;
 
     public PushChannelAdapter(FirebaseApp firebaseApp) {
-        this.firebaseMessaging = FirebaseMessaging.getInstance(firebaseApp);
+        this.firebaseMessaging = (firebaseApp == null) ? null : FirebaseMessaging.getInstance(firebaseApp);
     }
 
     @Override
@@ -31,6 +33,10 @@ public class PushChannelAdapter implements ChannelAdapter {
         String token = context.destination();
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("Missing device token for push notification");
+        }
+
+        if (firebaseMessaging == null) {
+            throw new IllegalStateException("Firebase is not configured (FIREBASE_SERVICE_ACCOUNT_JSON is missing)");
         }
 
         Message message = Message.builder()

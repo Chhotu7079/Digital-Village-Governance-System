@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,7 +24,7 @@ public class NotificationLog {
     private Long id;
 
     @Column(nullable = false)
-    private String requestId;
+    private UUID requestId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

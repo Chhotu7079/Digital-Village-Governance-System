@@ -1,13 +1,37 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
     name: auth-service
+
+  security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: "{noop}${ACTUATOR_PASS:actuator}"
+      roles: ACTUATOR
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs}?sslmode=${POSTGRES_SSLMODE:prefer}
+    # Force a valid PostgreSQL TimeZone (Railway may reject legacy alias Asia/Calcutta)
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs_auth}?sslmode=${POSTGRES_SSLMODE:prefer}&options=-c%20TimeZone%3DAsia%2FKolkata
     username: ${POSTGRES_USER:dvgs}
     password: ${POSTGRES_PASSWORD:dvgs}
+    hikari:
+      connection-init-sql: SET TimeZone TO 'Asia/Kolkata';
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: ${JPA_REPOSITORIES_BOOTSTRAP_MODE:deferred}
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -15,6 +39,8 @@ spring:
       hibernate:
         default_schema: ${DB_SCHEMA_AUTH:auth}
         format_sql: true
+        jdbc:
+          time_zone: ${HIBERNATE_JDBC_TIME_ZONE:Asia/Kolkata}
     show-sql: false
   flyway:
     enabled: true
@@ -23,12 +49,29 @@ spring:
 
 auth:
   token:
-    secret: bXktc3VwZXItc2VjcmV0LWtleS0xMjM0NTY3ODkwMTIzNDU2
+    secret: ${AUTH_JWT_SECRET:bXktc3VwZXItc2VjcmV0LWtleS0xMjM0NTY3ODkwMTIzNDU2}
     access-ttl: 15m
     refresh-ttl: 30d
-    issuer: dvgs-auth
+    issuer: ${AUTH_JWT_ISSUER:dvgs-auth}
   otp:
     code-length: 6
     ttl: 5m
     resend-cooldown: 45s
     max-attempts: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
+
+twilio:
+  # Enable Twilio WhatsApp sending by setting TWILIO_WHATSAPP_ENABLED=true
+  whatsapp-enabled: ${TWILIO_WHATSAPP_ENABLED:false}
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  # Twilio WhatsApp Sandbox default:
+  whatsapp-from: ${TWILIO_WHATSAPP_FROM:whatsapp:+14155238886}

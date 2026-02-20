@@ -2,6 +2,7 @@ package com.dvgs.gateway;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -18,24 +19,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    @Order(1)
+    public SecurityWebFilterChain actuatorChain(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(new org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher("/actuator/**"))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(ex -> ex.anyExchange().hasRole("ACTUATOR"))
+                .build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityWebFilterChain apiChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .pathMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Auth endpoints are public
                         .pathMatchers("/api/auth/**").permitAll()
                         // Swagger of gateway itself (if added later)
                         .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                        // Protect API surface; non-/api paths can remain public (will typically 404)
+                        // Protect API surface
                         .pathMatchers("/api/**").authenticated()
-                        .anyExchange().permitAll()
-                )
+                        .anyExchange().permitAll())
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(errorHandlers.authenticationEntryPoint())
-                        .accessDeniedHandler(errorHandlers.accessDeniedHandler())
-                )
+                        .accessDeniedHandler(errorHandlers.accessDeniedHandler()))
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> {}))
                 .build();
     }

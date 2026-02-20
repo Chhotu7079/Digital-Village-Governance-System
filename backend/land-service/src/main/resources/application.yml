@@ -1,12 +1,30 @@
 server:
-  port: ${LAND_SERVICE_PORT:8085}
+  port: ${SERVER_PORT:8085}
 
 spring:
+  application:
+    name: land-service
+
   security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: ${ACTUATOR_PASS:actuator}
+      roles: ACTUATOR
     oauth2:
       resourceserver:
         jwt:
           secret: ${AUTH_JWT_SECRET:}
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -28,7 +46,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: ${ACTUATOR_EXPOSE:health,info}
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
 
 logging:
   level:

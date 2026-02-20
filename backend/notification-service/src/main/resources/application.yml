@@ -1,18 +1,38 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
   application:
     name: notification-service
+
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs}?sslmode=${POSTGRES_SSLMODE:prefer}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs_notification}?sslmode=${POSTGRES_SSLMODE:prefer}
     username: ${POSTGRES_USER:dvgs}
     password: ${POSTGRES_PASSWORD:dvgs}
+
+  security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: ${ACTUATOR_PASS:actuator}
+      roles: ACTUATOR
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        # Credentials used by SBA to call this service's actuator endpoints
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
 
   flyway:
     enabled: true
     default-schema: ${DB_SCHEMA_NOTIFICATION:notification}
     schemas: ${DB_SCHEMA_NOTIFICATION:notification}
+    placeholder-replacement: false
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,6 +41,7 @@ spring:
         default_schema: ${DB_SCHEMA_NOTIFICATION:notification}
         format_sql: true
     show-sql: false
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
@@ -30,6 +51,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.dvgs.*"
+
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -39,13 +61,13 @@ spring:
 notification:
   channels:
     sms:
-      enabled: true
+      enabled: false
       provider: twilio
       from: "+9100000000"
       account-sid: "${TWILIO_ACCOUNT_SID:dummy}"
       auth-token: "${TWILIO_AUTH_TOKEN:dummy}"
     whatsapp:
-      enabled: true
+      enabled: false
       provider: twilio
       number: "+9100000000"
     email:
@@ -53,7 +75,7 @@ notification:
       provider: ses
       from: "no-reply@dvgs.org"
     push:
-      enabled: true
+      enabled: false
       provider: fcm
   template-cache-ttl: PT10M
   fallback-order:
@@ -67,14 +89,18 @@ notification:
     max-size: 1000
 
 auth-client:
-  jwk-set-uri: "${AUTH_SERVICE_JWKS:https://auth-service.local/.well-known/jwks.json}"
+  jwk-set-uri: "${AUTH_SERVICE_JWKS:http://localhost:8081/.well-known/jwks.json}"
   shared-secret: "${AUTH_SHARED_SECRET:change-me}"
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
+
 logging:
   level:
     com.dvgs.notification: INFO

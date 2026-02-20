@@ -25,7 +25,7 @@ public class NotificationEventPublisher {
     public void publishDeliveryEvent(NotificationLog logEntry) {
         try {
             String payload = objectMapper.writeValueAsString(logEntry);
-            kafkaTemplate.send("notification-delivery-events", logEntry.getRequestId(), payload);
+            kafkaTemplate.send("notification-delivery-events", logEntry.getRequestId().toString(), payload);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize notification log {}", logEntry.getId(), e);
         }

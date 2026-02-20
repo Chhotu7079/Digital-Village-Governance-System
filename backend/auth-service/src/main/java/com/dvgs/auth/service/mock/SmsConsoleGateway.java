@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("!prod")
+@Profile("sms")
 public class SmsConsoleGateway implements OtpService.SmsGateway {
 
     @Override

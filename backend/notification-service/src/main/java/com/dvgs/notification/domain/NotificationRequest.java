@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,7 +27,7 @@ public class NotificationRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false)
     private String sourceService;

@@ -46,6 +46,18 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Centralized monitoring (Spring Boot Admin client) -->
+        <dependency>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-client</artifactId>
+            <version>3.2.3</version>
+        </dependency>
+
         <!-- Database drivers -->
         <dependency>
             <groupId>org.postgresql</groupId>

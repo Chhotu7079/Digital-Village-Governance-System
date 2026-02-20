@@ -1,3 +1,6 @@
+CREATE SCHEMA IF NOT EXISTS notification;
+SET search_path TO notification;
+
 CREATE TABLE IF NOT EXISTS notification_templates (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(100) NOT NULL,

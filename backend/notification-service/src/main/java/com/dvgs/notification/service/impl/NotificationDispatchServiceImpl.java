@@ -41,7 +41,7 @@ public class NotificationDispatchServiceImpl implements NotificationDispatchServ
     @Override
     public String enqueueNotification(NotificationRequestDto requestDto) {
         NotificationRequest request = new NotificationRequest();
-        String requestId = UUID.randomUUID().toString();
+        UUID requestId = UUID.randomUUID();
         request.setId(requestId);
         request.setSourceService(requestDto.sourceService());
         request.setReferenceId(requestDto.referenceId());
@@ -57,15 +57,15 @@ public class NotificationDispatchServiceImpl implements NotificationDispatchServ
         metricsPublisher.recordSubmission(requestDto.sourceService(), request.getPriority().name());
 
         // delegate to orchestrator for async processing (can be replaced with actual queue)
-        channelOrchestrator.process(requestDto, requestId);
+        channelOrchestrator.process(requestDto, requestId.toString());
 
-        return requestId;
+        return requestId.toString();
     }
 
     @Override
     public List<NotificationStatusDto> getStatus(String requestId) {
         metricsPublisher.recordStatusLookup();
-        return logRepository.findByRequestIdOrderByLastAttemptAtDesc(requestId)
+        return logRepository.findByRequestIdOrderByLastAttemptAtDesc(UUID.fromString(requestId))
                 .stream()
                 .map(log -> new NotificationStatusDto(
                         log.getChannel(),

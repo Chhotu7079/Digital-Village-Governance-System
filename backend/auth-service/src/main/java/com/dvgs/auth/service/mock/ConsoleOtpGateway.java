@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @Profile("!prod")
-public class ConsoleOtpGateway implements OtpService.SmsGateway, OtpService.WhatsAppGateway {
+public class ConsoleOtpGateway implements OtpService.SmsGateway {
 
     @Override
     public void sendOtp(String phoneNumber, String code) {

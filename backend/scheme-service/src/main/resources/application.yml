@@ -1,12 +1,35 @@
 server:
-  port: 8084
+  port: ${SERVER_PORT:8084}
 
 spring:
   application:
     name: scheme-service
 
+  security:
+    user:
+      name: ${ACTUATOR_USER:actuator}
+      password: ${ACTUATOR_PASS:actuator}
+      roles: ACTUATOR
+    oauth2:
+      resourceserver:
+        jwt:
+          # Auth-service exposes a JWK set endpoint; using jwk-set-uri avoids requiring OIDC discovery.
+          jwk-set-uri: ${AUTH_JWK_SET_URI:http://auth-service:8081/.well-known/jwks.json}
+          # Optional OIDC issuer (only if you provide a real OIDC discovery endpoint)
+          issuer-uri: ${AUTH_ISSUER_URI:}
+
+  boot:
+    admin:
+      client:
+        enabled: ${SBA_ENABLED:true}
+        url: ${ADMIN_SERVER_URL:http://localhost:8088}
+        username: ${ACTUATOR_USER:actuator}
+        password: ${ACTUATOR_PASS:actuator}
+        instance:
+          prefer-ip: true
+
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs}?sslmode=${POSTGRES_SSLMODE:prefer}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dvgs_scheme}?sslmode=${POSTGRES_SSLMODE:prefer}
     username: ${POSTGRES_USER:dvgs}
     password: ${POSTGRES_PASSWORD:dvgs}
 
@@ -23,13 +46,6 @@ spring:
     locations: classpath:db/migration
     default-schema: ${DB_SCHEMA_SCHEME:scheme}
     schemas: ${DB_SCHEMA_SCHEME:scheme}
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # Set issuer-uri in env-specific config; keeping placeholder to match other services
-          issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8081}
 
 auth-service:
   base-url: ${AUTH_SERVICE_BASE_URL:http://localhost:8081}
@@ -57,7 +73,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,env,configprops,threaddump,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
 
 springdoc:
   api-docs:

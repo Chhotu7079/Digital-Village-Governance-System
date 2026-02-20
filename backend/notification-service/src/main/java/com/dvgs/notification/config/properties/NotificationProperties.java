@@ -27,10 +27,10 @@ public class NotificationProperties {
         return channels;
     }
 
-    public void setChannels(Map<String, ChannelSetting> channelConfig) {
+    public void setChannels(Map<ChannelType, ChannelSetting> channelConfig) {
         channels.clear();
         if (channelConfig != null) {
-            channelConfig.forEach((key, value) -> channels.put(ChannelType.valueOf(key.toUpperCase()), value));
+            channels.putAll(channelConfig);
         }
     }
 

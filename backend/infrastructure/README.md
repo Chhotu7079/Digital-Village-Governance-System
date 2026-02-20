@@ -15,6 +15,19 @@ This folder provides a **single docker-compose** to run the shared infrastructur
 
 From `backend/infrastructure`:
 
+### Full stack (infra + all services + Spring Boot Admin)
+
+```powershell
+copy .env.stack.example .env.stack
+# then:
+docker compose -f docker-compose.stack.yml --env-file .env.stack up -d --build
+```
+
+Open Spring Boot Admin:
+- http://localhost:8088 (default login: admin/admin)
+
+### Infrastructure only (no services)
+
 ### Option A: helper scripts (Windows PowerShell)
 
 ```powershell

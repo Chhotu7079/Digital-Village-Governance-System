@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1.5
+
+# Generic Dockerfile for any DVGS Spring Boot module.
+# Build with: docker build --build-arg MODULE=auth-service -f backend/docker/Dockerfile.maven-service backend
+
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /workspace
+
+# Build args
+ARG MODULE
+
+# Copy full multi-module project (needs backend/pom.xml + module sources)
+COPY . .
+
+# Build only the requested module (and its dependencies)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -q -DskipTests package -pl ${MODULE} -am
+
+# Runtime
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+ARG MODULE
+
+# Copy the built jar
+COPY --from=build /workspace/${MODULE}/target/*.jar /app/app.jar
+
+EXPOSE 8080
+
+# JVM options can be overridden via JAVA_OPTS
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

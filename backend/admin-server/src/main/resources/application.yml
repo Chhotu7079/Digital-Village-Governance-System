@@ -1,0 +1,22 @@
+server:
+  port: ${ADMIN_SERVER_PORT:8088}
+
+spring:
+  application:
+    name: admin-server
+
+  security:
+    user:
+      # UI login for the admin dashboard
+      name: ${ADMIN_USER:admin}
+      password: ${ADMIN_PASS:admin}
+
+  boot:
+    admin:
+      context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

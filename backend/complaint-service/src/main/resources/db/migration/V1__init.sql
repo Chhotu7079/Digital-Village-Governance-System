@@ -1,5 +1,8 @@
 -- Initial schema for Complaint Service
 
+CREATE SCHEMA IF NOT EXISTS complaint;
+SET search_path TO complaint;
+
 CREATE TABLE departments (
     id UUID PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
